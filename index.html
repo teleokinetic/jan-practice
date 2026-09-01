@@ -172,6 +172,7 @@ footer { max-width: var(--col); margin: 0 auto; padding: 0 16px calc(24px + env(
 .player { margin-top: 14px; }
 .pframe { position: relative; width: 100%; aspect-ratio: 9 / 16; max-height: 78dvh; border-radius: var(--r); overflow: hidden; background: var(--raised-2); }
 .pframe iframe, .pframe > div { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.player.wide .pframe { aspect-ratio: 16 / 9; } /* a landscape recording (row with data-wide) */
 body[data-local-edit] .chap, body[data-local-edit] .poster { cursor: text; }
 @media (hover: hover) and (pointer: fine) { .chap:hover .exname { color: var(--accent); } .poster:hover { filter: brightness(.97); } }
 
@@ -391,9 +392,9 @@ textarea.nbox { width: 100%; min-height: 7.5rem; resize: vertical; font: 17px/1.
 
   <div class="card moves" id="ph-chapters">
     <button class="pstep chap" type="button" data-chap="1"><span class="pn">1</span><span class="exname ed" data-key="ph.1.name">Expanding Water &amp; Cloud</span><span class="tc ed" data-key="ph.1.t">0:00</span></button>
-    <button class="pstep chap" type="button" data-chap="2"><span class="pn">2</span><span class="exname ed" data-key="ph.2.name">The Fixer</span><span class="tc ed" data-key="ph.2.t"></span></button>
-    <button class="pstep chap" type="button" data-chap="3"><span class="pn">3</span><span class="exname ed" data-key="ph.3.name">Rotational Embrace</span><span class="tc ed" data-key="ph.3.t"></span></button>
-    <button class="pstep chap" type="button" data-chap="4"><span class="pn">4</span><span class="exname ed" data-key="ph.4.name">Tracing the Horizon</span><span class="tc ed" data-key="ph.4.t"></span></button>
+    <button class="pstep chap" type="button" data-chap="2"><span class="pn">2</span><span class="exname ed" data-key="ph.2.name">Rotational Embrace</span><span class="tc ed" data-key="ph.2.t">0:24</span></button>
+    <button class="pstep chap" type="button" data-chap="3"><span class="pn">3</span><span class="exname ed" data-key="ph.3.name">The Fixer</span><span class="tc ed" data-key="ph.3.t">0:54</span></button>
+    <button class="pstep chap" type="button" data-chap="4" data-video="pTJ_Nj2snsY" data-wide=""><span class="pn">4</span><span class="exname ed" data-key="ph.4.name">Tracing the Horizon</span><span class="tc ed" data-key="ph.4.t">own video</span></button>
   </div>
   <p class="footnote ed" data-key="ph.foot" style="margin-top:8px">One continuous video. Tap a movement to jump to it.</p>
 
@@ -589,8 +590,9 @@ document.getElementById('copyAll').onclick = function () {
    Chapter start times are copy (data-key ph.N.t, "m:ss") so they can be set in #edit mode.
    The poster and the chapter rows load the YouTube player in place of the poster card; a row
    tapped before the player is ready plays from that time once it is. If the player API
-   cannot load (offline, blocked), the row opens YouTube at that time instead. */
-var PH_ID = 'nHD8NzC4JkI', phPlayer = null, phReady = false, phLoading = false, phPending = null, phTimer = null, phTick = null;
+   cannot load (offline, blocked), the row opens YouTube at that time instead.
+   A row with data-video="<id>" is a movement recorded separately: it loads that video in the same player. */
+var PH_ID = 'nHD8NzC4JkI', phCur = PH_ID, phLoaded = null, phPlayer = null, phReady = false, phLoading = false, phPending = null, phTimer = null, phTick = null;
 var phCard = document.getElementById('ph-card'), phWrap = document.getElementById('ph-player'), phStatus = document.getElementById('ph-status');
 function phTime(n) {
   var el = document.querySelector('[data-key="ph.' + n + '.t"]'); var t = el ? el.textContent.trim() : '';
@@ -604,23 +606,27 @@ function phTime(n) {
 function phPaint() {
   document.querySelectorAll('#ph-chapters .chap').forEach(function (b) {
     var n = b.getAttribute('data-chap'), t = phTime(n), tc = b.querySelector('.tc');
-    b.classList.toggle('unset', t === null && n !== '1');
+    b.classList.toggle('unset', t === null && n !== '1' && !b.hasAttribute('data-video'));
     if (tc && !tc.textContent.trim() && !document.body.hasAttribute('data-local-edit')) tc.setAttribute('data-empty', '');
     else if (tc) tc.removeAttribute('data-empty');
   });
 }
 function phMark() {
   if (!phReady || !phPlayer || typeof phPlayer.getCurrentTime !== 'function') return;
+  var rows = document.querySelectorAll('#ph-chapters .chap');
+  if (phLoaded && phLoaded !== PH_ID) { rows.forEach(function (b) { b.classList.toggle('now', b.getAttribute('data-video') === phLoaded); }); return; }
   var cur = phPlayer.getCurrentTime(), best = null;
-  [1, 2, 3, 4].forEach(function (n) { var t = phTime(n); if (t !== null && cur + 0.5 >= t && (best === null || t >= phTime(best))) best = n; });
-  document.querySelectorAll('#ph-chapters .chap').forEach(function (b) { b.classList.toggle('now', best !== null && b.getAttribute('data-chap') === String(best)); });
+  rows.forEach(function (b) { if (b.hasAttribute('data-video')) return; var n = b.getAttribute('data-chap'), t = phTime(n); if (t !== null && cur + 0.5 >= t && (best === null || t >= phTime(best))) best = n; });
+  rows.forEach(function (b) { b.classList.toggle('now', best !== null && b.getAttribute('data-chap') === best); });
 }
 function phShowPlayer() { phCard.hidden = true; phWrap.hidden = false; }
-function phUrl(sec) { return 'https://www.youtube.com/watch?v=' + PH_ID + (sec ? '&t=' + Math.floor(sec) + 's' : ''); }
+/* frame follows the wanted video: 9:16 for the phrase, 16:9 for a row marked data-wide */
+function phFrame() { var row = document.querySelector('#ph-chapters .chap[data-video="' + phCur + '"]'); phWrap.classList.toggle('wide', phCur !== PH_ID && !!row && row.hasAttribute('data-wide')); }
+function phUrl(sec) { return 'https://www.youtube.com/watch?v=' + phCur + (sec ? '&t=' + Math.floor(sec) + 's' : ''); }
 function phOpenExternal(sec) { window.open(phUrl(sec), '_blank', 'noopener'); }
 /* the player could not be used: put the poster back, point "Open in YouTube" at the wanted time, say why */
 function phFail(msg, sec) {
-  phLoading = false; phReady = false; phPlayer = null; phPending = null;
+  phLoading = false; phReady = false; phPlayer = null; phLoaded = null; phPending = null;
   clearTimeout(phTimer); clearInterval(phTick); phTick = null;
   var yt = document.getElementById('ph-yt'); if (yt) { var fresh = document.createElement('div'); fresh.id = 'ph-yt'; yt.parentNode.replaceChild(fresh, yt); }
   var open = document.getElementById('ph-open'); if (open) open.href = phUrl(sec);
@@ -633,17 +639,18 @@ function phLoadApi() {
   window.onYouTubeIframeAPIReady = function () {
     try {
       phPlayer = new YT.Player('ph-yt', {
-        videoId: PH_ID, host: 'https://www.youtube-nocookie.com',
+        videoId: phCur, host: 'https://www.youtube-nocookie.com',
         playerVars: { playsinline: 1, rel: 0, modestbranding: 1, controls: 1, autoplay: 0, enablejsapi: 1, origin: location.origin },
         events: {
           onReady: function () {
             phReady = true; clearTimeout(phTimer); phStatus.textContent = '';
-            if (phPending !== null) { phSeek(phPending); phPending = null; } else { try { phPlayer.playVideo(); } catch (e) {} }
+            if (phPending !== null) { var sec = phPending; phPending = null; phSeek(sec, phCur); } else { try { phPlayer.playVideo(); } catch (e) {} }
             phTick = setInterval(phMark, 500);
           },
           onError: function () { phFail('The video wouldn\'t play here — use "Open in YouTube" below.', phPending || 0); }
         }
       });
+      phLoaded = phCur;
     } catch (e) { phFail('The video wouldn\'t load here — use "Open in YouTube" below.', phPending || 0); }
   };
   var s = document.createElement('script'); s.src = 'https://www.youtube.com/iframe_api'; s.async = true;
@@ -651,8 +658,15 @@ function phLoadApi() {
   document.head.appendChild(s);
   phTimer = setTimeout(function () { if (!phReady) { phStatus.textContent = 'Still loading… "Open in YouTube" below works too.'; var open = document.getElementById('ph-open'); if (open) open.href = phUrl(phPending || 0); } }, 8000);
 }
-function phSeek(sec) {
-  if (phReady && phPlayer) { try { phPlayer.seekTo(sec, true); phPlayer.playVideo(); } catch (e) {} phMark(); return; }
+function phSeek(sec, vid) {
+  phCur = vid || PH_ID; phFrame();
+  if (phReady && phPlayer) {
+    try {
+      if (phCur !== phLoaded) { phLoaded = phCur; phPlayer.loadVideoById({ videoId: phCur, startSeconds: sec }); }
+      else { phPlayer.seekTo(sec, true); phPlayer.playVideo(); }
+    } catch (e) {}
+    phMark(); return;
+  }
   phPending = sec; phShowPlayer(); phLoadApi();
 }
 function phPause() { if (phReady && phPlayer) { try { phPlayer.pauseVideo(); } catch (e) {} } }
@@ -662,7 +676,7 @@ document.getElementById('ph-chapters').addEventListener('click', function (ev) {
   var t = phTime(b.getAttribute('data-chap'));
   if (t === null) t = 0;
   phStatus.textContent = '';
-  phSeek(t);
+  phSeek(t, b.getAttribute('data-video'));
   try { phWrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {}
 });
 phPaint();

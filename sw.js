@@ -2,7 +2,7 @@
    The shell (page, manifest, icons, the movement frames) is precached, then refreshed in the
    background on every load. Videos stream from YouTube and are never cached. copy.json is never
    served from cache (the app fetches it with cache: 'no-store'). Bump CACHE on every deploy. */
-var CACHE = "jan-map-v1";
+var CACHE = "jan-map-v2";
 var SHELL = ["./", "./index.html", "./manifest.webmanifest",
              "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png", "./apple-touch-icon.png",
              "./img/phrase-thumb.jpg", "./img/stork-frame.jpg", "./img/hinge-frame.jpg"];
