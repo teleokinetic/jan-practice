@@ -1,0 +1,793 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Jan's Practice Map</title>
+  <meta name="theme-color" content="#FAF7F1">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Practice Map">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Source+Sans+3:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<style>
+/* ---- 1. tokens ---- */
+:root {
+  color-scheme: light;
+  --bg:#FAF7F1; --raised:#F1EBDE; --raised-2:#E9E1CF; --card:#FFFDF9;
+  --text:#2E2A24; --head:#2B3442; --soft:#4A463E; --muted:#665F51;
+  --accent:#3A5A80; --accent-hover:#2E4A6B; --wash:rgba(58,90,128,.10); --danger:#8A3B2E;
+  --rule:#E3DBCB; --rule-strong:#CBC1AC; --ink:#FBF9F4;
+  --display:"Newsreader","Iowan Old Style",Palatino,Georgia,serif;
+  --serif:"Source Serif 4",Georgia,serif;
+  --sans:"Source Sans 3","Helvetica Neue",Arial,system-ui,sans-serif;
+  --r:20px; --r-hero:24px; --r-in:14px; --col:480px;
+  --edge: max(16px, calc((100% - var(--col)) / 2 + 16px));
+}
+
+/* ---- 2. base ---- */
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
+html, body { background: var(--bg); }
+body { margin: 0; color: var(--text); font: 17px/1.5 var(--serif); -webkit-font-smoothing: antialiased; min-height: 100dvh; }
+a { color: var(--accent); }
+::selection { background: var(--accent); color: var(--ink); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+button { -webkit-tap-highlight-color: transparent; font: inherit; color: inherit; }
+main { max-width: var(--col); margin: 0 auto; padding: calc(14px + env(safe-area-inset-top, 0px)) 16px calc(28px + env(safe-area-inset-bottom, 0px)); }
+artifact-local { display: contents; }
+.screen { display: none; }
+.screen[data-local-active] { display: block; }
+
+/* ---- 3. shared pieces ---- */
+.lbl { margin: 0; font: 600 13px/1.3 var(--sans); color: var(--accent); }
+.topbar { display: flex; align-items: center; justify-content: space-between; min-height: 44px; margin-bottom: 14px; padding-right: 56px; }
+.wordmark { font: 400 22px/1.1 var(--display); color: var(--accent); }
+.back { border: 0; background: none; cursor: pointer; min-height: 44px; padding: 0 12px 0 0; display: inline-flex; align-items: center; font: 600 15px/1 var(--sans); color: var(--accent); }
+.stitle { font: 400 30px/1.1 var(--display); color: var(--head); margin: 0 0 4px; text-wrap: balance; }
+.sintro { margin: 0 0 14px; font: 15px/1.4 var(--sans); color: var(--muted); }
+.footnote { margin: 14px 0 0; font: 15px/1.4 var(--sans); color: var(--muted); }
+.card { background: var(--card); border: 1px solid var(--rule); border-radius: var(--r); padding: 16px; }
+.soft { background: var(--raised); border: 0; }
+.chev { flex: none; stroke: var(--accent); }
+/* buttons: filled pill · outline pill · wash pill · bare */
+.send { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 20px; border: 0; border-radius: 999px; background: var(--accent); color: var(--ink); font: 700 15px/1 var(--sans); cursor: pointer; transition: background .15s ease; }
+.send[disabled] { opacity: .55; cursor: default; }
+.ghost { display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 0 16px; border: 1px solid var(--rule-strong); border-radius: 999px; background: var(--card); color: var(--accent); font: 600 15px/1 var(--sans); cursor: pointer; }
+.ghost.danger { color: var(--danger); border-color: transparent; background: none; text-decoration: underline; text-underline-offset: 3px; padding: 0 8px; }
+.pillbtn { display: inline-flex; align-items: center; min-height: 40px; padding: 0 16px; border: 0; border-radius: 999px; background: var(--wash); color: var(--accent); font: 600 15px/1 var(--sans); cursor: pointer; }
+.reset { border: 0; background: none; cursor: pointer; min-height: 44px; padding: 0 0 0 12px; display: inline-flex; align-items: center; font: 600 13px/1 var(--sans); color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+.nstatus { font: 15px/1.4 var(--sans); color: var(--muted); }
+.nstatus.err { color: var(--danger); font-weight: 600; }
+p.nstatus { margin: 8px 0 0; }
+
+/* ---- 4. quick note: round + button top-right on every screen, sheet drops under it ---- */
+#fab { position: fixed; z-index: 30; top: calc(14px + env(safe-area-inset-top, 0px)); right: var(--edge); width: 44px; height: 44px; border: 0; border-radius: 50%; background: var(--wash); color: var(--accent); display: grid; place-items: center; cursor: pointer; transition: background .15s ease; }
+#fab svg { stroke: currentColor; }
+#sheet { position: fixed; z-index: 31; top: calc(66px + env(safe-area-inset-top, 0px)); right: var(--edge); left: var(--edge); max-width: 448px; margin-left: auto; background: var(--card); border: 1px solid var(--rule); border-radius: var(--r); padding: 16px; box-shadow: 0 1px 2px rgba(46,42,36,.08), 0 12px 32px rgba(46,42,36,.14); max-height: calc(100dvh - 90px); overflow: auto; }
+#sheet .lbl { margin-bottom: 8px; }
+#sheet textarea { width: 100%; min-height: 6rem; max-height: 30dvh; resize: vertical; font: 17px/1.5 var(--serif); color: var(--text); background: var(--bg); border: 1px solid var(--rule-strong); border-radius: var(--r-in); padding: 10px 12px; }
+#sheet .rowb { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
+body[data-local-edit] #fab, body[data-local-edit] #sheet { display: none; }
+
+/* ---- 5. edit bar (Tanner: open with #edit) ---- */
+#editbar { display: none; position: sticky; top: 0; z-index: 25; align-items: center; gap: 8px 12px; flex-wrap: wrap; padding: calc(8px + env(safe-area-inset-top, 0px)) var(--edge) 8px; background: rgba(250,247,241,.94); backdrop-filter: blur(8px); border-bottom: 1px solid var(--rule); font: 13px/1.4 var(--sans); color: var(--muted); }
+body[data-local-edit] #editbar { display: flex; }
+#editbar .grow { flex: 1 1 auto; }
+#editbar .st { min-width: 4rem; text-align: right; font: 600 12px/1.4 var(--sans); color: var(--accent); }
+#editbar button { min-height: 36px; padding: 0 14px; border: 1px solid var(--rule-strong); border-radius: 999px; background: var(--card); color: var(--accent); font: 600 14px/1 var(--sans); cursor: pointer; }
+#editbar .edn { flex-basis: 100%; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding-top: 6px; border-top: 1px solid var(--rule); margin-top: 2px; }
+#editbar .ednl { font: 600 12px/1 var(--sans); color: var(--muted); margin-right: 2px; }
+#editbar .edn button { min-height: 32px; padding: 0 12px; font-size: 13px; border-color: var(--rule); color: var(--muted); }
+#editbar .edn button.on { background: var(--accent); border-color: var(--accent); color: var(--ink); }
+/* an emptied copy slot vanishes for Jan (label and all) and comes back in edit mode so it can be refilled */
+.fn:has(> .ed:empty), p.footnote.ed:empty, .pstep:has(> .lbody > .exname:empty), .exbody.ed:empty { display: none; }
+body[data-local-edit] .fn:has(> .ed:empty), body[data-local-edit] .pstep:has(> .lbody > .exname:empty) { display: grid; }
+body[data-local-edit] p.footnote.ed:empty, body[data-local-edit] .exbody.ed:empty { display: block; min-height: 1.2em; }
+body[data-local-edit] .fn:has(> .ed:empty) { display: block; }
+.prow:has(> .ed:empty:first-child) { display: none; }
+body[data-local-edit] .prow:has(> .ed:empty:first-child) { display: block; }
+body[data-local-edit] .prow > .ed:empty { display: block; min-height: 1.2em; }
+body[data-local-edit] .ed { outline: 1px dashed rgba(58,90,128,.35); outline-offset: 2px; border-radius: 2px; cursor: text; }
+body[data-local-edit] .ed:focus { outline: 2px solid var(--accent); outline-offset: 2px; }
+body[data-local-edit] .edlink { display: none; }
+.edlink { display: none; color: var(--accent); background: none; border: 0; padding: 12px 0; margin: -12px 0; cursor: pointer; font: 13px/1.4 var(--sans); text-decoration: underline; text-underline-offset: 3px; }
+footer { max-width: var(--col); margin: 0 auto; padding: 0 16px calc(24px + env(safe-area-inset-bottom, 0px)); display: flex; justify-content: space-between; gap: 12px 16px; flex-wrap: wrap; font: 13px/1.4 var(--sans); color: var(--muted); }
+
+/* ---- 6. home ---- */
+.hero { position: relative; width: 100%; text-align: left; cursor: pointer; background: var(--raised-2); border: 0; border-radius: var(--r-hero); padding: 18px 18px 16px; display: flex; flex-direction: column; gap: 6px; }
+.hero .glyph { position: absolute; top: 16px; right: 16px; opacity: .35; stroke: var(--accent); }
+.hero .hname { font: 400 28px/1.1 var(--display); color: var(--head); padding-right: 56px; text-wrap: balance; }
+.hero .hsub { font: 15px/1.35 var(--sans); color: var(--soft); }
+.hero .cta { margin-top: 12px; align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; height: 42px; padding: 0 16px 0 14px; border-radius: 999px; background: var(--accent); color: var(--ink); font: 700 15px/1 var(--sans); }
+.hero .cta svg { fill: var(--ink); flex: none; }
+.two { margin-top: 12px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.tile { min-height: 136px; display: flex; flex-direction: column; gap: 4px; text-align: left; cursor: pointer; transition: border-color .15s ease; }
+.tile .tname { font: 400 24px/1.1 var(--display); color: var(--head); }
+.tile .tsub { font: 14px/1.35 var(--sans); color: var(--muted); }
+.tile .tlast { margin-top: auto; padding-top: 10px; font: 600 13px/1.3 var(--sans); color: var(--accent); }
+.also { gap: 5px; }
+.also .lbl { margin-bottom: 2px; }
+.arow { font: 14px/1.35 var(--sans); color: var(--text); }
+.arow .an { font-weight: 600; }
+.arow .dose { color: var(--muted); margin-left: .25em; }
+.pills { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 8px; }
+.goal { margin-top: 14px; padding: 14px 18px 16px; display: flex; flex-direction: column; gap: 6px; }
+.goal .gline { font: italic 400 18px/1.3 var(--display); color: var(--text); text-wrap: pretty; }
+.goal .know { font: 14px/1.35 var(--sans); color: var(--soft); }
+.goal .know .k { font-weight: 600; }
+.home-foot { margin-top: 18px; display: flex; justify-content: space-between; align-items: center; gap: 12px; font: 13px/1.4 var(--sans); color: var(--muted); }
+
+/* ---- 7. movement lists ---- */
+.exname { font: 600 17px/1.3 var(--serif); color: var(--text); text-wrap: balance; }
+.dur { font: 600 13px/1.4 var(--sans); color: var(--muted); white-space: nowrap; }
+.exbody { font: 15px/1.4 var(--sans); color: var(--soft); }
+.fn { display: block; font: 13px/1.4 var(--sans); color: var(--muted); }
+.fk { font-weight: 600; color: var(--text); }
+.fn .fk { margin-right: .35em; }
+.chip { display: inline-block; font: 600 12px/1.3 var(--sans); color: var(--muted); background: var(--raised); border-radius: 999px; padding: 3px 10px; }
+.psec { margin: 18px 0 8px; }
+.moves { padding: 2px 16px; }
+.pstep { display: grid; grid-template-columns: 24px minmax(0, 1fr); column-gap: 12px; align-items: start; padding: 12px 0; border-top: 1px solid var(--rule); }
+.pstep:first-child { border-top: 0; }
+.pstep .pn { padding-top: 3px; font: 600 13px/1.4 var(--sans); color: var(--muted); }
+.pstep .lbody { display: flex; flex-direction: column; gap: 3px; }
+.pstep .exbody { color: var(--muted); }
+
+
+/* ---- 8. Jan: arrive card · form-demo frames · chapters + player ---- */
+.softcard { display: flex; flex-direction: column; gap: 6px; }
+.softbody { font: 15px/1.45 var(--sans); color: var(--soft); }
+.card > .fn { font: 15px/1.45 var(--sans); color: var(--soft); }
+.card > .fn .fk { color: var(--text); }
+.phrase { margin: 2px 0 4px; font: italic 400 22px/1.3 var(--display); color: var(--text); text-wrap: pretty; }
+.meta { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.pstep.vid { grid-template-columns: 24px minmax(0, 1fr) 64px; }
+.pstep.vid .dur { white-space: normal; text-align: right; }
+.rowthumb { position: relative; display: block; width: 64px; height: 64px; border-radius: 12px; overflow: hidden; background: var(--raised-2); }
+.rowthumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 35%; }
+.play { position: absolute; left: 50%; top: 50%; width: 56px; height: 56px; margin: -28px 0 0 -28px; border-radius: 50%; background: rgba(251,249,244,.92); display: grid; place-items: center; box-shadow: 0 2px 10px rgba(46,42,36,.18); pointer-events: none; }
+.play svg { fill: var(--accent); }
+.play.sm { width: 36px; height: 36px; margin: -18px 0 0 -18px; box-shadow: none; background: var(--ink); }
+.tc { font: 600 13px/1.4 var(--sans); color: var(--accent); white-space: nowrap; text-decoration: none; }
+.chap { width: 100%; border: 0; background: none; text-align: left; cursor: pointer; grid-template-columns: 24px minmax(0, 1fr) auto; align-items: center; column-gap: 12px; border-top: 1px solid var(--rule); }
+.chap:first-child { border-top: 0; }
+.chap .tc { padding-top: 0; min-width: 2.5rem; text-align: right; }
+.chap .tc[data-empty]::before { content: '\2014'; color: var(--muted); }
+.chap.now .exname { color: var(--accent); }
+.chap.now .pn { color: var(--accent); }
+.pcard { display: flex; gap: 14px; align-items: stretch; padding: 12px; margin-top: 14px; }
+.poster { position: relative; flex: none; width: 118px; height: 210px; border: 0; padding: 0; border-radius: 12px; overflow: hidden; background: var(--raised-2); cursor: pointer; }
+.poster img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.ptext { display: flex; flex-direction: column; gap: 6px; justify-content: center; min-width: 0; flex: 1; }
+.vtitle { font: 600 17px/1.3 var(--serif); color: var(--text); }
+.vsub { font: 14px/1.35 var(--sans); color: var(--muted); }
+.player { margin-top: 14px; }
+.pframe { position: relative; width: 100%; aspect-ratio: 9 / 16; max-height: 78dvh; border-radius: var(--r); overflow: hidden; background: var(--raised-2); }
+.pframe iframe, .pframe > div { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+body[data-local-edit] .chap, body[data-local-edit] .poster { cursor: text; }
+@media (hover: hover) and (pointer: fine) { .chap:hover .exname { color: var(--accent); } .poster:hover { filter: brightness(.97); } }
+
+/* ---- 9. library · principles ---- */
+.lrow { display: block; text-decoration: none; color: inherit; margin-top: 10px; }
+.lrow .lbody { display: flex; flex-direction: column; gap: 4px; }
+.lrow .go { display: inline-flex; align-items: center; gap: 4px; margin-top: 8px; font: 600 15px/1 var(--sans); color: var(--accent); }
+.prow { margin-top: 10px; padding: 14px 16px; font: 400 20px/1.3 var(--display); color: var(--text); text-wrap: pretty; }
+.prow small { display: block; margin-top: 4px; font: italic 400 14px/1.4 var(--serif); color: var(--muted); }
+
+/* ---- 10. your notes ---- */
+.send-row { display: flex; align-items: center; gap: 8px 12px; margin-top: 12px; flex-wrap: wrap; }
+textarea.nbox { width: 100%; min-height: 7.5rem; resize: vertical; font: 17px/1.5 var(--serif); color: var(--text); background: var(--card); border: 1px solid var(--rule-strong); border-radius: var(--r-in); padding: 12px 14px; margin-top: 4px; }
+.qlist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.qlist li { position: relative; display: flex; flex-direction: column; gap: 4px; padding: 12px 44px 12px 14px; background: var(--card); border: 1px solid var(--rule); border-radius: var(--r-in); }
+.qhead { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.qlist .d { font: 600 13px/1.4 var(--sans); color: var(--muted); white-space: nowrap; }
+.qctx { font: 600 12px/1.3 var(--sans); color: var(--accent); background: var(--wash); border-radius: 999px; padding: 2px 9px; }
+.qt { font: 15px/1.45 var(--serif); color: var(--text); white-space: pre-wrap; }
+.qx { position: absolute; top: 4px; right: 4px; width: 40px; height: 40px; border: 0; background: none; color: var(--muted); font-size: 18px; line-height: 1; cursor: pointer; border-radius: 50%; display: grid; place-items: center; }
+.qmore { margin-top: 8px; display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.qmore .qlist { width: 100%; }
+.qtoggle, #copyall { padding-left: 0; min-height: 40px; }
+.nhist { margin-top: 16px; }
+.nh-item { padding: 8px 0; border-top: 1px solid var(--rule); }
+.nh-date { font: 600 13px/1.4 var(--sans); color: var(--muted); }
+.nh-text { margin: 4px 0 0; font: 15px/1.4 var(--sans); color: var(--soft); white-space: pre-wrap; }
+
+/* ---- 11. hover · active · motion ---- */
+@media (hover: hover) and (pointer: fine) {
+  .tile:hover, .lrow:hover { border-color: var(--rule-strong); }
+  .send:hover, .hero:hover .cta { background: var(--accent-hover); }
+  .ghost:hover, #editbar button:hover { border-color: var(--accent); }
+  #fab:hover, .pillbtn:hover { background: rgba(58,90,128,.16); }
+}
+.tile:active, .lrow:active { border-color: var(--rule-strong); background: var(--bg); }
+.hero:active { filter: brightness(.98); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+</style>
+</head>
+<body>
+<!--
+  Jan's Practice Map — same build as Joe's (teleokinetic.github.io/joe-practice): home → screens,
+  #edit copy mode with data-keys, "Copy for Claude", quick-note +, Send to Tanner via FormSubmit.
+  Jan-specific: Strength is a plain circuit with form-demo frames linking to the YouTube Shorts;
+  Daily phrase is one continuous YouTube video with chapter rows that seek into it (start times are
+  copy keys ph.N.t, editable in #edit mode). Recordings open on YouTube (unlisted).
+  Copy edits Tanner makes in #edit mode live in his browser; "Copy for Claude" hands them to the next build,
+  or drop a copy.json beside this file to override keys for everyone.
+-->
+<artifact-local>
+<div id="editbar">
+  <span>Editing copy — tap any text to change it. Changes save as you type.</span>
+  <span class="grow"></span>
+  <span class="st" id="edst"></span>
+  <button id="copyAll" type="button">Copy for Claude</button>
+  <button id="editDone" type="button">Done</button>
+  <div class="edn" id="edn" aria-label="Go to screen">
+    <span class="ednl">Screen</span>
+    <button type="button" data-go="home">Home</button>
+    <button type="button" data-go="strength">Strength</button>
+    <button type="button" data-go="running">Running</button>
+    <button type="button" data-go="phrase">Daily phrase</button>
+    <button type="button" data-go="library">Library</button>
+    <button type="button" data-go="principles">Principles</button>
+    <button type="button" data-go="note">Your notes</button>
+  </div>
+</div>
+</artifact-local>
+
+<main>
+
+<!-- ================= HOME ================= -->
+<section id="screen-home" class="screen" data-local-active="">
+  <div class="topbar">
+    <span class="wordmark ed" data-key="title">Jan's Practice Map</span>
+  </div>
+
+  <button class="hero" type="button" onclick="go('strength')">
+    <svg class="glyph" width="44" height="44" viewBox="0 0 44 44" fill="none" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M8 34c5-14 23-14 28 0"></path><path d="M15 34c2-7 12-7 14 0"></path><circle cx="22" cy="12" r="3.5" fill="#3A5A80" stroke="none"></circle></svg>
+    <span class="hname ed" data-key="week.strength.name">Strength</span>
+    <span class="hsub ed" data-key="week.strength.body">Stork squat, push-up, kickstand hinge. Two to five times per week. &lt;15min</span>
+    <span class="cta"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FBF9F4" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg><span class="ed" data-key="week.strength.cta">Begin</span></span>
+  </button>
+
+  <div class="two">
+    <button class="card tile" type="button" onclick="go('running')">
+      <span class="tname ed" data-key="week.run.name">Running</span>
+      <span class="tsub ed" data-key="week.run.body">Intervals. Run with one of your practices, or the three terrible oaths.</span>
+      <span class="tlast ed" data-key="week.run.dose">1–4 a week</span>
+    </button>
+    <button class="card tile" type="button" onclick="go('phrase')">
+      <span class="tname ed" data-key="week.phrase.name">Daily phrase</span>
+      <span class="tsub ed" data-key="week.phrase.body">A few minutes to remember and enjoy your body.</span>
+      <span class="tlast ed" data-key="week.phrase.dose">4 movements</span>
+    </button>
+  </div>
+
+  <div class="card soft also" style="margin-top:12px; display:flex; flex-direction:column">
+    <p class="lbl ed" data-key="week.also.label">Also this week</p>
+    <div class="arow"><span class="an ed" data-key="week.snacks.name">Movement snacks</span><span class="dose ed" data-key="week.snacks.dose">during work</span></div>
+    <div class="arow"><span class="an ed" data-key="week.floor.name">Floor lesson</span><span class="dose ed" data-key="week.floor.dose">whenever you feel like it</span></div>
+  </div>
+
+  <div class="pills">
+    <button class="pillbtn" type="button" onclick="go('library')"><span class="ed" data-key="card.library.title">Library</span></button>
+    <button class="pillbtn" type="button" onclick="go('principles')"><span class="ed" data-key="card.principles.title">Principles</span></button>
+    <button class="pillbtn" type="button" onclick="go('note')"><span class="ed" data-key="card.note.title">Your notes</span></button>
+  </div>
+
+  <div class="card goal">
+    <p class="lbl ed" data-key="headed.label">Where you're headed</p>
+    <p class="gline ed" data-key="headed.sentence" style="margin:0">Strength has begun! Learning to enjoy it the way you have with running + developing basic capacity.</p>
+  </div>
+
+  <div class="home-foot">
+    <span class="ed" data-key="wordmark">Personal Training for Meditators</span>
+    <artifact-local><button id="editToggle" class="edlink" type="button">Edit copy</button></artifact-local>
+  </div>
+</section>
+
+<!-- ================= STRENGTH ================= -->
+<section id="screen-strength" class="screen">
+  <div class="topbar"><button class="back" type="button" onclick="go('home')">‹ Home</button></div>
+  <div class="stitle ed" role="heading" aria-level="2" data-key="st.title">Strength</div>
+  <p class="sintro ed" data-key="st.intro">Keeping things easy on purpose. This block is about enjoyment and continuity, not capacity.</p>
+
+  <div class="card soft softcard">
+    <p class="lbl ed" data-key="st.arrive.label">Arrive</p>
+    <p class="phrase ed" data-key="st.arrive.phrase">May I enjoy things just as they are?</p>
+    <span class="softbody"><span class="ed" data-key="st.arrive.body">Say it once before you begin, then rest in whatever is there. Drop it in mid-rep if it helps, or just move.</span> <span class="fk ed" data-key="st.arrive.alt">If another practice feels more alive, use that instead.</span></span>
+  </div>
+
+  <p class="lbl psec ed" data-key="st.circuit.label">The circuit</p>
+  <div class="card moves">
+    <div class="pstep vid"><span class="pn">1</span><div class="lbody">
+      <div class="meta"><div class="exname ed" data-key="st.1.name">Stork squat</div><span class="dur ed" data-key="st.1.dose">5–10 each side</span></div>
+      <div class="exbody ed" data-key="st.1.cue">The support leg is there for balance only — under a tenth of your weight. Keep the pelvis level: "a platter of champagne glasses that never tips"</div>
+    </div><a class="rowthumb" href="https://youtube.com/shorts/WCkEar01EBQ" target="_blank" rel="noopener" aria-label="Watch the stork squat form demo"><img src="img/stork-frame.jpg" alt="" width="64" height="64"><span class="play sm"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"></path></svg></span></a></div>
+    <div class="pstep"><span class="pn">2</span><div class="lbody">
+      <div class="meta"><div class="exname ed" data-key="st.2.name">Push-up, from the knees</div><span class="dur ed" data-key="st.2.dose">5–10</span></div>
+      <div class="exbody ed" data-key="st.2.cue">Slow down, slow up.</div>
+    </div></div>
+    <div class="pstep vid"><span class="pn">3</span><div class="lbody">
+      <div class="meta"><div class="exname ed" data-key="st.3.name">Kickstand hinge</div><span class="dur ed" data-key="st.3.dose">5–10 each side</span></div>
+      <div class="exbody ed" data-key="st.3.cue">The back leg is the kickstand. A slight bend in the front knee that stays exactly where it is. A mirror or your phone will tell you if it's turning into a squat.</div>
+    </div><a class="rowthumb" href="https://youtube.com/shorts/LMGAD7TZWzQ" target="_blank" rel="noopener" aria-label="Watch the kickstand hinge form demo"><img src="img/hinge-frame.jpg" alt="" width="64" height="64"><span class="play sm"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"></path></svg></span></a></div>
+  </div>
+
+  <p class="lbl psec ed" data-key="st.dose.label">The dose</p>
+  <div class="card" style="display:flex; flex-direction:column; gap:10px">
+    <span class="fn"><span class="fk ed" data-key="st.d1.k">Slow.</span><span class="ed" data-key="st.d1">30 to 60 seconds between movements. Two rounds if you do it in one go — that's the whole session.</span></span>
+    <span class="fn"><span class="fk ed" data-key="st.d2.k">Or spread it.</span><span class="ed" data-key="st.d2">One round is one triplet. Do one triplet in the morning, a second in the afternoon. Either works!</span></span>
+    <span class="fn"><span class="fk ed" data-key="st.d3.k">Two times a week is the minimum,</span><span class="ed" data-key="st.d3">four or five is the maximum.</span></span>
+  </div>
+
+  <p class="footnote ed" data-key="st.foot">If a movement starts to feel easy or you're unsure of how to progress, just shoot me a DM.</p>
+</section>
+
+<!-- ================= RUNNING ================= -->
+<section id="screen-running" class="screen">
+  <div class="topbar"><button class="back" type="button" onclick="go('home')">‹ Home</button></div>
+  <div class="stitle ed" role="heading" aria-level="2" data-key="run.title">Running</div>
+  <p class="sintro ed" data-key="run.intro">Fifteen intervals of 1:30 running, 0:30 walking. No frequency goal any more — a range, with both ends respected.</p>
+
+  <div class="card soft softcard">
+    <p class="lbl ed" data-key="run.freq.label">Frequency</p>
+    <span class="softbody"><span class="fk ed" data-key="run.freq.k1">One a week is the floor.</span> <span class="ed" data-key="run.freq.b1">Enough to hold what's built.</span> <span class="fk ed" data-key="run.freq.k2">Four is the ceiling.</span></span>
+  </div>
+
+  <p class="lbl psec ed" data-key="run.images.label">Some images you've found useful</p>
+  <div class="card moves">
+    <div class="pstep"><span class="pn">1</span><div class="lbody">
+      <div class="exname ed" data-key="run.i1.name">Eyeballs along the spine</div>
+      <div class="exbody ed" data-key="run.i1.body">Spine awareness; rotation</div>
+    </div></div>
+    <div class="pstep"><span class="pn">2</span><div class="lbody">
+      <div class="exname ed" data-key="run.i2.name">The doll on strings</div>
+      <div class="exbody ed" data-key="run.i2.body">Hands and legs pulling the whole movement through strings.</div>
+    </div></div>
+    <div class="pstep"><span class="pn">3</span><div class="lbody">
+      <div class="exname ed" data-key="run.i3.name">Two small plates</div>
+      <div class="exbody ed" data-key="run.i3.body">Near the spine, initiating the movement.</div>
+    </div></div>
+  </div>
+
+  <p class="lbl psec ed" data-key="run.methods.label">Methods</p>
+  <div class="card" style="display:flex; flex-direction:column; gap:10px">
+    <span class="fn"><span class="fk ed" data-key="run.m1.k">Listen for enjoyment.</span><span class="ed" data-key="run.m1">As you run, listen for and inquire into pleasurable sensation. What feels good?</span></span>
+    <span class="fn"><span class="fk ed" data-key="run.m2.k">Attuning to spaciousness while moving.</span><span class="ed" data-key="run.m2">The guided recording, below.</span></span>
+  </div>
+
+  <p class="lbl psec ed" data-key="run.found.label">The foundation</p>
+  <a class="card lrow" style="margin-top:0" href="https://youtu.be/kOFQGXPjXrY" target="_blank" rel="noopener">
+    <span class="lbody">
+      <span class="meta"><span class="exname ed" data-key="run.r1.name">Attuning to Spaciousness While Moving</span><span class="dur ed" data-key="run.r1.dur">14 min</span></span>
+      <span class="exbody ed" data-key="run.r1.what">Guided recording.</span>
+    </span>
+    <span class="go">Listen ↗</span>
+  </a>
+  <a class="card lrow" href="https://youtu.be/TIK1rVIuaSI" target="_blank" rel="noopener">
+    <span class="lbody">
+      <span class="meta"><span class="exname ed" data-key="run.r2.name">Loosening Up to Run — Part 1</span><span class="dur ed" data-key="run.r2.dur">14 min</span></span>
+      <span class="exbody ed" data-key="run.r2.what">The side-lying taster: knee and hand glides, pelvis and ribcage turning together.</span>
+    </span>
+    <span class="go">Listen ↗</span>
+  </a>
+  <p class="footnote ed" data-key="run.foot"></p>
+</section>
+
+<!-- ================= DAILY PHRASE ================= -->
+<section id="screen-phrase" class="screen">
+  <div class="topbar"><button class="back" type="button" onclick="go('home')">‹ Home</button></div>
+  <div class="stitle ed" role="heading" aria-level="2" data-key="ph.title">Daily phrase</div>
+  <p class="sintro ed" data-key="ph.intro">Listen for enjoyment.</p>
+
+  <div class="card moves" id="ph-chapters">
+    <button class="pstep chap" type="button" data-chap="1"><span class="pn">1</span><span class="exname ed" data-key="ph.1.name">Expanding Water &amp; Cloud</span><span class="tc ed" data-key="ph.1.t">0:00</span></button>
+    <button class="pstep chap" type="button" data-chap="2"><span class="pn">2</span><span class="exname ed" data-key="ph.2.name">The Fixer</span><span class="tc ed" data-key="ph.2.t"></span></button>
+    <button class="pstep chap" type="button" data-chap="3"><span class="pn">3</span><span class="exname ed" data-key="ph.3.name">Rotational Embrace</span><span class="tc ed" data-key="ph.3.t"></span></button>
+    <button class="pstep chap" type="button" data-chap="4"><span class="pn">4</span><span class="exname ed" data-key="ph.4.name">Tracing the Horizon</span><span class="tc ed" data-key="ph.4.t"></span></button>
+  </div>
+  <p class="footnote ed" data-key="ph.foot" style="margin-top:8px">One continuous video. Tap a movement to jump to it.</p>
+
+  <div class="card pcard" id="ph-card">
+    <button class="poster" id="ph-poster" type="button" aria-label="Play Jan's Movement Phrase"><img src="img/phrase-thumb.jpg" alt="" width="118" height="210"><span class="play"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"></path></svg></span></button>
+    <div class="ptext">
+      <span class="vtitle ed" data-key="ph.v.name">Jan's Movement Phrase</span>
+      <span class="vsub ed" data-key="ph.v.sub">All four movements, in order. Follow along.</span>
+      <a class="tc" id="ph-open" href="https://youtube.com/shorts/nHD8NzC4JkI" target="_blank" rel="noopener">Open in YouTube ↗</a>
+    </div>
+  </div>
+  <artifact-local>
+  <div class="player" id="ph-player" hidden=""><div class="pframe"><div id="ph-yt"></div></div></div>
+  <p class="nstatus" id="ph-status" style="margin-top:8px"></p>
+  </artifact-local>
+
+  <p class="lbl psec ed" data-key="ph.desk.label">At the desk</p>
+  <div class="card" style="display:flex; flex-direction:column; gap:10px">
+    <span class="fn"><span class="fk ed" data-key="ph.k1.k">End of a work block.</span><span class="ed" data-key="ph.k1">One minute of movement during the day.</span></span>
+    <span class="fn"><span class="fk ed" data-key="ph.k2.k">Reading as a body.</span><span class="ed" data-key="ph.k2">Keep the body at the periphery, like the wall behind the monitor.</span></span>
+  </div>
+  <p class="footnote ed" data-key="ph.foot2"></p>
+</section>
+
+<!-- ================= LIBRARY ================= -->
+<section id="screen-library" class="screen">
+  <div class="topbar"><button class="back" type="button" onclick="go('home')">‹ Home</button></div>
+  <div class="stitle ed" role="heading" aria-level="2" data-key="library.title">Library</div>
+  <p class="sintro ed" data-key="library.intro">Practice recordings. The floor lessons work through novelty — return to them occasionally rather than daily.</p>
+  <a class="card lrow" style="margin-top:0" href="https://youtu.be/kOFQGXPjXrY" target="_blank" rel="noopener">
+    <span class="lbody">
+      <span class="meta"><span class="exname ed" data-key="lib.1.name">Attuning to Spaciousness While Moving</span><span class="dur ed" data-key="lib.1.dur">14 min</span></span>
+      <span class="exbody ed" data-key="lib.1.what">Finding the space that is always available by inhabiting your body in the environment.</span>
+    </span>
+    <span class="go">Listen ↗</span>
+  </a>
+  <a class="card lrow" href="https://youtu.be/TIK1rVIuaSI" target="_blank" rel="noopener">
+    <span class="lbody">
+      <span class="meta"><span class="exname ed" data-key="lib.2.name">Loosening Up to Run — Part 1</span><span class="dur ed" data-key="lib.2.dur">14 min</span></span>
+      <span class="exbody ed" data-key="lib.2.what">The side-lying taster: knee and hand glides, pelvis and ribcage turning together.</span>
+    </span>
+    <span class="go">Listen ↗</span>
+  </a>
+  <a class="card lrow" href="https://youtu.be/tC25vqSJ2H0" target="_blank" rel="noopener">
+    <span class="lbody">
+      <span class="meta"><span class="exname ed" data-key="lib.3.name">Loosening Up to Run — Full Lesson</span><span class="dur ed" data-key="lib.3.dur">31 min</span></span>
+      <span class="exbody ed" data-key="lib.3.what">Both sides. The head joining, then differentiating; shoulder–pelvis counter-rotation.</span>
+    </span>
+    <span class="go">Listen ↗</span>
+  </a>
+  <a class="card lrow" href="https://youtu.be/R4mtynmE5NM" target="_blank" rel="noopener">
+    <span class="lbody">
+      <span class="meta"><span class="exname ed" data-key="lib.4.name">When One Part Moves, the Whole Body Responds</span><span class="dur ed" data-key="lib.4.dur">29 min</span></span>
+      <span class="exbody ed" data-key="lib.4.what">Tiny knee tilts rippling through everything — desk-sized by the end.</span>
+    </span>
+    <span class="go">Listen ↗</span>
+  </a>
+  <a class="card lrow" href="https://youtu.be/GnDqNwKVMtM" target="_blank" rel="noopener">
+    <span class="lbody">
+      <span class="meta"><span class="exname ed" data-key="lib.5.name">Connecting Head &amp; Pelvis</span><span class="dur ed" data-key="lib.5.dur">27 min</span></span>
+      <span class="exbody ed" data-key="lib.5.what">The spine as a rail connecting all the stations.</span>
+    </span>
+    <span class="go">Listen ↗</span>
+  </a>
+  <div class="card lrow">
+    <span class="lbody">
+      <span class="meta"><span class="exname ed" data-key="lib.6.name">Jaw, Head &amp; Pelvis</span><span class="dur ed" data-key="lib.6.dur">27 min</span></span>
+      <span class="exbody ed" data-key="lib.6.what">Holding the jaw still while head and pelvis roll — the “bamboozling phenomenon.”</span>
+    </span>
+    <span style="margin-top:8px; display:inline-block"><span class="chip ed" data-key="lib.6.chip">audio coming</span></span>
+  </div>
+</section>
+
+<!-- ================= PRINCIPLES ================= -->
+<section id="screen-principles" class="screen">
+  <div class="topbar"><button class="back" type="button" onclick="go('home')">‹ Home</button></div>
+  <div class="stitle ed" role="heading" aria-level="2" data-key="principles.title">Principles</div>
+  <p class="sintro ed" data-key="principles.intro">A few things that have resonated along the way.</p>
+  <div class="card prow" style="margin-top:0"><span class="ed" data-key="p.1">Energy surplus, not depletion.</span><small class="ed" data-key="p.1.src">From the very first call</small></div>
+  <div class="card prow"><span class="ed" data-key="p.2">Cut at the turning point — where enjoyment starts becoming exhaustion.</span><small class="ed" data-key="p.2.src">The forest runs</small></div>
+  <div class="card prow"><span class="ed" data-key="p.3">Getting kicked out of awareness is an effect of practice, not a failure.</span><small class="ed" data-key="p.3.src">Purpose, method, effects, results</small></div>
+  <div class="card prow"><span class="ed" data-key="p.4"></span><small class="ed" data-key="p.4.src"></small></div>
+  <div class="card prow"><span class="ed" data-key="p.5"></span><small class="ed" data-key="p.5.src"></small></div>
+</section>
+
+<!-- ================= YOUR NOTES ================= -->
+<section id="screen-note" class="screen">
+  <div class="topbar"><button class="back" type="button" onclick="go('home')">‹ Home</button><artifact-local><button class="reset" type="button" onclick="clearNote()">Clear draft</button></artifact-local></div>
+  <div class="stitle ed" role="heading" aria-level="2" data-key="note.title">Your notes</div>
+  <p class="sintro ed" data-key="note.intro">Anything you notice between sessions — send it over whenever.</p>
+  <p class="lbl ed" data-key="note.compose.label">What are you noticing?</p>
+  <artifact-local>
+    <textarea class="nbox" id="note-main" placeholder="This week…"></textarea>
+    <div class="send-row">
+      <button class="send" id="send" type="button">Send to Tanner</button>
+      <button class="ghost" id="copy" type="button">Copy</button>
+      <span class="nstatus" id="nstatus"></span>
+    </div>
+    <div class="nhist" id="nhist"></div>
+  </artifact-local>
+  <p class="lbl psec ed" data-key="note.list.label">Notes you've added</p>
+  <artifact-local>
+    <p class="footnote" id="qempty" style="margin-top:0">Nothing yet — tap + on any screen to jot one.</p>
+    <p class="footnote" id="qnone" style="margin-top:0" hidden="">Nothing new since you last shared.</p>
+    <ul class="qlist" id="qlist"></ul>
+    <div class="qmore" id="qmore"></div>
+    <button class="reset" id="copyall" type="button" hidden="">Copy all notes</button>
+  </artifact-local>
+  <p class="footnote ed" data-key="note.foot">Notes you send land in Tanner's inbox. If sending fails, your mail app opens with the note filled in.</p>
+</section>
+
+</main>
+
+<button id="fab" type="button" artifact-local="" aria-controls="sheet" aria-expanded="false" aria-label="Quick note"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button>
+<div id="sheet" artifact-local="" hidden="">
+  <p class="lbl" id="sheet-lbl">Quick note</p>
+  <textarea id="sheet-text" placeholder="What did you notice?"></textarea>
+  <div class="rowb">
+    <button class="ghost" id="sheet-cancel" type="button">Cancel</button>
+    <button class="send" id="sheet-save" type="button">Save</button>
+  </div>
+</div>
+
+<script>
+/* ---------- navigation (per-viewer) ---------- */
+var SCREENS = ['home', 'strength', 'running', 'phrase', 'library', 'principles', 'note'];
+function go(name, force) {
+  if (document.body.hasAttribute('data-local-edit') && !force) return; /* editing copy: cards don't navigate — use the edit bar's screen row */
+  SCREENS.forEach(function (s) {
+    var el = document.getElementById('screen-' + s);
+    if (s === name) el.setAttribute('data-local-active', ''); else el.removeAttribute('data-local-active');
+  });
+  document.querySelectorAll('#edn button[data-go]').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-go') === name); });
+  if (name !== 'phrase' && typeof phPause === 'function') phPause();
+  window.scrollTo(0, 0);
+}
+document.getElementById('edn').addEventListener('click', function (ev) { var b = ev.target.closest('button[data-go]'); if (b) go(b.getAttribute('data-go'), true); });
+
+/* ---------- copy editing (Tanner: open with #edit) ----------
+   Edited copy is keyed by data-key. Kept in: copy.json alongside this page (committed to the
+   repo — survives for every viewer) → this browser's localStorage → the page's defaults.
+   "Copy for Claude" puts every key on the clipboard so the next build can bake it in. */
+var EDS = Array.prototype.slice.call(document.querySelectorAll('.ed'));
+var CKEY = 'jan-map-copy-v1';
+var edst = document.getElementById('edst'), edT;
+function note(msg, hold) { edst.textContent = msg; clearTimeout(edT); if (!hold) edT = setTimeout(function () { edst.textContent = ''; }, 1800); }
+function collect() { var o = {}; EDS.forEach(function (el) { var k = el.getAttribute('data-key'); if (k) o[k] = el.textContent; }); return o; }
+function apply(o) { if (!o) return; EDS.forEach(function (el) { var k = el.getAttribute('data-key'); if (k && typeof o[k] === 'string') el.textContent = o[k]; }); if (typeof phPaint === 'function') phPaint(); }
+function setEdit(on) {
+  EDS.forEach(function (el) { if (on) el.setAttribute('contenteditable', 'true'); else el.removeAttribute('contenteditable'); });
+  if (on) { document.body.setAttribute('data-local-edit', ''); window.scrollTo(0, 0); var cur = SCREENS.filter(function (s) { return document.getElementById('screen-' + s).hasAttribute('data-local-active'); })[0] || 'home'; document.querySelectorAll('#edn button[data-go]').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-go') === cur); }); } else document.body.removeAttribute('data-local-edit');
+  if (!on && location.hash === '#edit') { try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {} }
+  if (typeof phPaint === 'function') phPaint();
+}
+/* keep edited text plain: no rich paste, no line breaks inside a text leaf */
+EDS.forEach(function (el) {
+  el.addEventListener('paste', function (e) {
+    e.preventDefault();
+    var t = (e.clipboardData || window.clipboardData).getData('text/plain').replace(/\s+/g, ' ');
+    try { document.execCommand('insertText', false, t); } catch (err) { el.textContent += t; }
+  });
+  el.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); el.blur(); } });
+});
+document.getElementById('editToggle').onclick = function () { setEdit(true); };
+/* load: copy.json (repo) → localStorage → defaults */
+(function loadCopy() {
+  var local = null; try { local = JSON.parse(localStorage.getItem(CKEY) || 'null'); } catch (e) {}
+  if (local) apply(local);
+  try {
+    fetch('copy.json', { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (remote) {
+      if (remote && typeof remote === 'object') { apply(remote); try { localStorage.setItem(CKEY, JSON.stringify(remote)); } catch (e) {} }
+    }).catch(function () {});
+  } catch (e) {}
+})();
+if (location.hash === '#edit') setEdit(true);
+window.addEventListener('hashchange', function () { setEdit(location.hash === '#edit'); });
+document.getElementById('editDone').onclick = function () { setEdit(false); };
+EDS.forEach(function (el) {
+  el.addEventListener('input', function () {
+    try { localStorage.setItem(CKEY, JSON.stringify(collect())); } catch (e) {}
+    note('saved on this device', true);
+    if (typeof phPaint === 'function') phPaint();
+  });
+});
+document.getElementById('copyAll').onclick = function () {
+  var lines = EDS.map(function (el) { return (el.getAttribute('data-key') || '?') + ' — ' + el.textContent.replace(/\s+/g, ' ').trim(); });
+  var text = 'Jan\'s Practice Map — copy\n\n' + lines.join('\n');
+  function done() { note('copied'); }
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, done); else done();
+};
+
+/* ---------- daily phrase: one continuous video, chapters seek into it ----------
+   Chapter start times are copy (data-key ph.N.t, "m:ss") so they can be set in #edit mode.
+   The poster and the chapter rows load the YouTube player in place of the poster card; a row
+   tapped before the player is ready plays from that time once it is. If the player API
+   cannot load (offline, blocked), the row opens YouTube at that time instead. */
+var PH_ID = 'nHD8NzC4JkI', phPlayer = null, phReady = false, phLoading = false, phPending = null, phTimer = null, phTick = null;
+var phCard = document.getElementById('ph-card'), phWrap = document.getElementById('ph-player'), phStatus = document.getElementById('ph-status');
+function phTime(n) {
+  var el = document.querySelector('[data-key="ph.' + n + '.t"]'); var t = el ? el.textContent.trim() : '';
+  var m = /^(?:(\d+):)?(\d{1,2}):(\d{2})$|^(\d+):(\d{2})$|^(\d+)$/.exec(t);
+  if (!m) return null;
+  if (m[6]) return +m[6];
+  if (m[4]) return +m[5] < 60 ? (+m[4]) * 60 + (+m[5]) : null;
+  if (+m[3] >= 60 || (m[1] && +m[2] >= 60)) return null;
+  return (+(m[1] || 0)) * 3600 + (+m[2]) * 60 + (+m[3]);
+}
+function phPaint() {
+  document.querySelectorAll('#ph-chapters .chap').forEach(function (b) {
+    var n = b.getAttribute('data-chap'), t = phTime(n), tc = b.querySelector('.tc');
+    b.classList.toggle('unset', t === null && n !== '1');
+    if (tc && !tc.textContent.trim() && !document.body.hasAttribute('data-local-edit')) tc.setAttribute('data-empty', '');
+    else if (tc) tc.removeAttribute('data-empty');
+  });
+}
+function phMark() {
+  if (!phReady || !phPlayer || typeof phPlayer.getCurrentTime !== 'function') return;
+  var cur = phPlayer.getCurrentTime(), best = null;
+  [1, 2, 3, 4].forEach(function (n) { var t = phTime(n); if (t !== null && cur + 0.5 >= t && (best === null || t >= phTime(best))) best = n; });
+  document.querySelectorAll('#ph-chapters .chap').forEach(function (b) { b.classList.toggle('now', best !== null && b.getAttribute('data-chap') === String(best)); });
+}
+function phShowPlayer() { phCard.hidden = true; phWrap.hidden = false; }
+function phUrl(sec) { return 'https://www.youtube.com/watch?v=' + PH_ID + (sec ? '&t=' + Math.floor(sec) + 's' : ''); }
+function phOpenExternal(sec) { window.open(phUrl(sec), '_blank', 'noopener'); }
+/* the player could not be used: put the poster back, point "Open in YouTube" at the wanted time, say why */
+function phFail(msg, sec) {
+  phLoading = false; phReady = false; phPlayer = null; phPending = null;
+  clearTimeout(phTimer); clearInterval(phTick); phTick = null;
+  var yt = document.getElementById('ph-yt'); if (yt) { var fresh = document.createElement('div'); fresh.id = 'ph-yt'; yt.parentNode.replaceChild(fresh, yt); }
+  var open = document.getElementById('ph-open'); if (open) open.href = phUrl(sec);
+  phCard.hidden = false; phWrap.hidden = true; phStatus.textContent = msg;
+  phOpenExternal(sec);
+}
+function phLoadApi() {
+  if (phLoading || phReady) return; phLoading = true;
+  phStatus.textContent = 'Loading video…';
+  window.onYouTubeIframeAPIReady = function () {
+    try {
+      phPlayer = new YT.Player('ph-yt', {
+        videoId: PH_ID, host: 'https://www.youtube-nocookie.com',
+        playerVars: { playsinline: 1, rel: 0, modestbranding: 1, controls: 1, autoplay: 0, enablejsapi: 1, origin: location.origin },
+        events: {
+          onReady: function () {
+            phReady = true; clearTimeout(phTimer); phStatus.textContent = '';
+            if (phPending !== null) { phSeek(phPending); phPending = null; } else { try { phPlayer.playVideo(); } catch (e) {} }
+            phTick = setInterval(phMark, 500);
+          },
+          onError: function () { phFail('The video wouldn\'t play here — use "Open in YouTube" below.', phPending || 0); }
+        }
+      });
+    } catch (e) { phFail('The video wouldn\'t load here — use "Open in YouTube" below.', phPending || 0); }
+  };
+  var s = document.createElement('script'); s.src = 'https://www.youtube.com/iframe_api'; s.async = true;
+  s.onerror = function () { phFail('Couldn\'t reach YouTube from here — use "Open in YouTube" below.', phPending || 0); };
+  document.head.appendChild(s);
+  phTimer = setTimeout(function () { if (!phReady) { phStatus.textContent = 'Still loading… "Open in YouTube" below works too.'; var open = document.getElementById('ph-open'); if (open) open.href = phUrl(phPending || 0); } }, 8000);
+}
+function phSeek(sec) {
+  if (phReady && phPlayer) { try { phPlayer.seekTo(sec, true); phPlayer.playVideo(); } catch (e) {} phMark(); return; }
+  phPending = sec; phShowPlayer(); phLoadApi();
+}
+function phPause() { if (phReady && phPlayer) { try { phPlayer.pauseVideo(); } catch (e) {} } }
+document.getElementById('ph-poster').onclick = function () { if (document.body.hasAttribute('data-local-edit')) return; phSeek(0); };
+document.getElementById('ph-chapters').addEventListener('click', function (ev) {
+  var b = ev.target.closest('.chap'); if (!b || document.body.hasAttribute('data-local-edit')) return;
+  var t = phTime(b.getAttribute('data-chap'));
+  if (t === null) t = 0;
+  phStatus.textContent = '';
+  phSeek(t);
+  try { phWrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {}
+});
+phPaint();
+
+/* ---------- your notes (per-viewer) ----------
+   Quick notes (+ button) keep the screen they were written on and stay until Jan removes them.
+   "Send to Tanner" sends the main note plus whatever was added since the last send. */
+var NKEY = 'jan-map-note', QKEY = 'jan-map-quick', SKEY = 'jan-map-sent', LKEY = 'jan-map-lastsent';
+var ENDPOINT = 'https://formsubmit.co/ajax/e5140376f99018c5113aaaa81b550434'; /* same FormSubmit box as Joe's map → Tanner's inbox */
+var noteMain = document.getElementById('note-main'), nstatus = document.getElementById('nstatus');
+try { noteMain.value = localStorage.getItem(NKEY) || ''; } catch (e) {}
+noteMain.addEventListener('input', function () { try { localStorage.setItem(NKEY, noteMain.value); } catch (e) {} });
+var quick = [];
+try { quick = JSON.parse(localStorage.getItem(QKEY) || '[]') || []; } catch (e) { quick = []; }
+function saveQuick() { try { localStorage.setItem(QKEY, JSON.stringify(quick)); } catch (e) {} }
+function today() { return new Date().toISOString().slice(0, 10); }
+function lastSent() { try { return +localStorage.getItem(LKEY) || 0; } catch (e) { return 0; } }
+function fmtDate(ts) { return new Date(ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }); }
+function noteTs(n) { return n.ts || (n.d ? new Date(n.d + 'T12:00:00').getTime() : 0); }
+function screenLabel() {
+  var s = SCREENS.filter(function (k) { return document.getElementById('screen-' + k).hasAttribute('data-local-active'); })[0] || 'home';
+  if (s === 'home') return 'Home';
+  var t = document.querySelector('#screen-' + s + ' .stitle'); return t ? t.textContent.replace(/\s+/g, ' ').trim() : s;
+}
+function allNotes() {
+  var out = quick.map(function (n, i) { return { ts: noteTs(n), t: n.t, ctx: n.ctx || '', i: i }; });
+  out.sort(function (a, b) { return b.ts - a.ts; });
+  return out;
+}
+var notesShowEarlier = false;
+function noteItem(n, sharedFlag) {
+  var li = document.createElement('li');
+  var head = document.createElement('div'); head.className = 'qhead';
+  var d = document.createElement('span'); d.className = 'd'; d.textContent = fmtDate(n.ts) + (sharedFlag ? ' · shared' : '');
+  head.appendChild(d);
+  if (n.ctx) { var c = document.createElement('span'); c.className = 'qctx'; c.textContent = n.ctx; head.appendChild(c); }
+  var t = document.createElement('div'); t.className = 'qt'; t.textContent = n.t;
+  li.appendChild(head); li.appendChild(t);
+  var x = document.createElement('button'); x.type = 'button'; x.className = 'qx'; x.title = 'Remove'; x.setAttribute('aria-label', 'Remove note'); x.textContent = '×'; x.onclick = function () { quick.splice(n.i, 1); saveQuick(); renderNotes(); }; li.appendChild(x);
+  return li;
+}
+/* new since the last share on top; everything already shared folds behind "Show earlier" */
+function renderNotes() {
+  var ul = document.getElementById('qlist'), more = document.getElementById('qmore'); if (!ul) return;
+  var notes = allNotes(), shared = lastSent();
+  var fresh = notes.filter(function (n) { return n.ts > shared; }), earlier = notes.filter(function (n) { return n.ts <= shared; });
+  var empty = document.getElementById('qempty'); if (empty) empty.hidden = notes.length > 0;
+  var none = document.getElementById('qnone'); if (none) none.hidden = !(fresh.length === 0 && earlier.length > 0);
+  ul.innerHTML = ''; fresh.forEach(function (n) { ul.appendChild(noteItem(n, false)); });
+  if (more) {
+    more.innerHTML = '';
+    if (earlier.length) {
+      var tg = document.createElement('button'); tg.type = 'button'; tg.className = 'reset qtoggle';
+      tg.textContent = (notesShowEarlier ? 'Hide earlier' : 'Show earlier') + ' (' + earlier.length + ')';
+      tg.onclick = function () { notesShowEarlier = !notesShowEarlier; renderNotes(); };
+      more.appendChild(tg);
+      if (notesShowEarlier) { var ul2 = document.createElement('ul'); ul2.className = 'qlist'; earlier.forEach(function (n) { ul2.appendChild(noteItem(n, true)); }); more.appendChild(ul2); }
+    }
+  }
+  var ca = document.getElementById('copyall'); if (ca) ca.hidden = notes.length === 0;
+}
+renderNotes();
+var fab = document.getElementById('fab'), sheet = document.getElementById('sheet'), ta = document.getElementById('sheet-text'), sheetLbl = document.getElementById('sheet-lbl'), sheetCtx = '';
+function openSheet(on) {
+  sheet.hidden = !on; fab.setAttribute('aria-expanded', on ? 'true' : 'false');
+  if (on) { sheetCtx = screenLabel(); if (sheetLbl) sheetLbl.textContent = 'Quick note · ' + sheetCtx; ta.focus(); }
+}
+fab.onclick = function () { openSheet(sheet.hidden); };
+document.getElementById('sheet-cancel').onclick = function () { ta.value = ''; openSheet(false); };
+document.getElementById('sheet-save').onclick = function () {
+  var t = ta.value.trim(); if (!t) { openSheet(false); return; }
+  quick.push({ d: today(), ts: Date.now(), t: t, ctx: sheetCtx }); saveQuick(); renderNotes(); ta.value = ''; openSheet(false);
+};
+function compile(all) {
+  var parts = [];
+  var m = noteMain.value.trim(); if (m && !all) parts.push(m);
+  var since = all ? -1 : lastSent(); var list = allNotes().filter(function (n) { return n.ts > since; }).reverse();
+  if (list.length) parts.push(list.map(function (n) { return fmtDate(n.ts) + (n.ctx ? ' · ' + n.ctx : '') + ' — ' + n.t; }).join('\n'));
+  return parts.join('\n\n');
+}
+function loadSent() { try { return JSON.parse(localStorage.getItem(SKEY) || '[]'); } catch (e) { return []; } }
+function renderHist() {
+  var h = document.getElementById('nhist'); var sent = loadSent().slice(-3).reverse();
+  h.innerHTML = sent.map(function (n) {
+    var d = new Date(n.t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    return '<div class="nh-item"><div class="nh-date">' + (n.how === 'copied' ? 'Copied ' + d : 'Sent ' + d + ' ✓') + '</div><p class="nh-text"></p></div>';
+  }).join('');
+  var ps = h.querySelectorAll('.nh-text'); sent.forEach(function (n, i) { ps[i].textContent = n.note; });
+}
+renderHist();
+/* sending or copying both count as shared: the box clears, the notes stay and fold into "earlier" */
+function afterShare(text, how) {
+  var sent = loadSent(); sent.push({ t: Date.now(), note: text, how: how });
+  try { localStorage.setItem(SKEY, JSON.stringify(sent)); localStorage.setItem(LKEY, String(Date.now())); localStorage.setItem(NKEY, ''); } catch (e) {}
+  noteMain.value = '';
+  renderNotes(); renderHist();
+}
+function afterSend(text) { afterShare(text, 'sent'); }
+function mailtoFallback(text) {
+  window.location.href = 'mailto:tannerholman97@gmail.com?subject=' + encodeURIComponent('Note — Jan — ' + today()) + '&body=' + encodeURIComponent(text);
+}
+document.getElementById('send').onclick = function () {
+  var text = compile(); var btn = this;
+  if (!text) { nstatus.className = 'nstatus'; nstatus.textContent = 'Write a note first — even one line is plenty.'; return; }
+  btn.disabled = true; nstatus.className = 'nstatus'; nstatus.textContent = 'Sending…';
+  fetch(ENDPOINT, {
+    method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    body: JSON.stringify({ _subject: 'Jan practice map — note ' + today(), client: 'Jan Orzechowski', note: text })
+  }).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(function () { afterSend(text); nstatus.textContent = 'Sent to Tanner ✓'; btn.disabled = false; })
+    .catch(function () { nstatus.textContent = 'Opening your mail app instead…'; btn.disabled = false; mailtoFallback(text); });
+};
+document.getElementById('copy').onclick = function () {
+  var text = compile(); if (!text) { nstatus.className = 'nstatus'; nstatus.textContent = 'Nothing new to copy.'; return; }
+  function done() { afterShare(text, 'copied'); nstatus.className = 'nstatus'; nstatus.textContent = 'Copied — paste it into a message to Tanner. Marked as shared.'; }
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, done); else done();
+};
+document.getElementById('copyall').onclick = function () {
+  var text = compile(true); if (!text) { nstatus.textContent = 'No notes yet.'; return; }
+  function done() { nstatus.className = 'nstatus'; nstatus.textContent = 'Copied all notes.'; }
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, done); else done();
+};
+function clearNote() { noteMain.value = ''; try { localStorage.setItem(NKEY, ''); } catch (e) {} nstatus.textContent = 'Cleared.'; }
+</script>
+<script>if ('serviceWorker' in navigator && location.protocol !== 'file:') { navigator.serviceWorker.register('sw.js').catch(function(){}); }</script>
+
+</body>
+</html>
